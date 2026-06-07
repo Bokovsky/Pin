@@ -9,7 +9,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
-    throw new Error(body.error || `Request failed (${res.status})`)
+    throw new Error(body.detail ? `${body.error}: ${body.detail}` : (body.error || `Request failed (${res.status})`))
   }
   return res.json()
 }

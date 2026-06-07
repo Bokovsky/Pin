@@ -253,17 +253,17 @@ apiRoutes.post("/import", async (c) => {
   try {
     const body = await c.req.json<NavData>()
     if (!body || !Array.isArray(body.categories)) {
-      return c.json({ error: "Invalid format" }, 400)
+      return c.json({ error: "Invalid format: missing categories array" }, 400)
     }
     for (const cat of body.categories) {
       if (!cat.name) {
-        return c.json({ error: "Invalid format" }, 400)
+        return c.json({ error: "Invalid format: category name is required" }, 400)
       }
     }
     ensureIds(body)
     await writeData(body)
     return c.json({ success: true })
   } catch (err) {
-    return c.json({ error: "Invalid format" }, 400)
+    return c.json({ error: "Import failed", detail: String(err) }, 500)
   }
 })

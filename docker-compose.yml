@@ -1,0 +1,9 @@
+services:
+  pin:
+    container_name: pin
+    build: .
+    ports:
+      - "3395:3000"
+    volumes:
+      - ./data:/app/data
+    restart: always

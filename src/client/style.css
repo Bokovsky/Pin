@@ -1,0 +1,51 @@
+@import "tailwindcss";
+@import "./theme/vars.css";
+@import "./theme/light.css";
+@import "./theme/dark.css";
+
+/* Force our font over DevUI's defaults */
+html, body, #app, .app-root {
+  font-family: var(--pin-font-body) !important;
+  font-size: 15px !important;
+  line-height: 1.8 !important;
+}
+
+button, input, select, textarea, [class*="d-"] {
+  font-family: inherit !important;
+}
+
+/* Override DevUI's CSS variables that set 12px base */
+:root {
+  --devui-font-size: 15px !important;
+  --devui-font-size-sm: 13px !important;
+  --devui-font-size-lg: 17px !important;
+  --devui-font-size-card-title: 15px !important;
+  --devui-line-height-base: 1.8 !important;
+  --devui-font-title-weight: 400 !important;
+}
+
+/* DevUI's .grid class conflicts with Tailwind's grid utility */
+/* It sets letter-spacing:-.31em which causes text overlap on all grid items */
+.grid {
+  letter-spacing: normal !important;
+  word-spacing: normal !important;
+}
+
+body {
+  background-color: var(--pin-bg);
+  color: var(--pin-ink);
+  transition: background-color var(--pin-transition-normal),
+              color var(--pin-transition-normal);
+}
+
+button, a, input, select, textarea {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

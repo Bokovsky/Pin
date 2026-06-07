@@ -1,0 +1,16 @@
+node_modules/
+dist/
+dist-server/
+data/links.json
+*.tmp
+*.log
+*.txt
+*.json
+.DS_Store
+!package-lock.json
+pin-ss.json
+.codegraph/
+start-dev.ps1
+AGENTS.md
+docs/
+OneNav_Export_*.json

@@ -1,0 +1,17 @@
+[data-theme="light"] {
+  --pin-bg: #f8f9fa;
+  --pin-surface: #ffffff;
+  --pin-surface-hover: #f1f3f5;
+  --pin-border: #dee2e6;
+  --pin-border-hover: #adb5bd;
+  --pin-ink: #212529;
+  --pin-ink-secondary: #495057;
+  --pin-ink-muted: #868e96;
+  --pin-accent: #228be6;
+  --pin-accent-hover: #1c7ed6;
+  --pin-accent-text: #ffffff;
+  --pin-danger: #e03131;
+  --pin-success: #2f9e44;
+
+  color-scheme: light;
+}

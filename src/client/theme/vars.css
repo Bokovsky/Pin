@@ -1,0 +1,26 @@
+:root {
+  --pin-radius-sm: 0.375rem;
+  --pin-radius-md: 0.5rem;
+  --pin-radius-lg: 0.75rem;
+  --pin-radius-full: 9999px;
+
+  --pin-space-xs: 0.25rem;
+  --pin-space-sm: 0.5rem;
+  --pin-space-md: 0.75rem;
+  --pin-space-lg: 1rem;
+  --pin-space-xl: 1.5rem;
+  --pin-space-2xl: 2rem;
+
+  --pin-transition-fast: 150ms ease;
+  --pin-transition-normal: 200ms ease;
+  --pin-transition-slow: 300ms ease;
+
+  --pin-z-dropdown: 50;
+  --pin-z-sticky: 40;
+  --pin-z-modal-backdrop: 60;
+  --pin-z-modal: 70;
+  --pin-z-toast: 80;
+  --pin-z-tooltip: 90;
+
+  --pin-font-body: "LXGW WenKai", system-ui, -apple-system, sans-serif;
+}

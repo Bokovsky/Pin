@@ -112,6 +112,7 @@ function parseJsonBookmarks(text: string): NavData {
 
   // Already in NavData format
   if (data.categories && Array.isArray(data.categories)) {
+    ensureImportCategories(data.categories)
     return data as NavData
   }
 
@@ -126,6 +127,19 @@ function parseJsonBookmarks(text: string): NavData {
   }
 
   throw new Error("无法识别的 JSON 结构")
+}
+
+function ensureImportCategories(cats: any[]) {
+  for (const cat of cats) {
+    if (!cat.name) cat.name = "未命名分类"
+    if (!Array.isArray(cat.links)) cat.links = []
+    if (!Array.isArray(cat.children)) cat.children = []
+    for (const link of cat.links) {
+      if (!link.title) link.title = "未命名"
+      if (!link.url) link.url = "about:blank"
+    }
+    ensureImportCategories(cat.children)
+  }
 }
 
 /* ========== Import Handler ========== */

@@ -65,18 +65,26 @@ apiRoutes.get("/nav", async (c) => {
 
 apiRoutes.post("/category", async (c) => {
   try {
-    const body = await c.req.json<Partial<Category>>()
+    const body = await c.req.json<Partial<Category> & { parentId?: string }>()
     const data = await readData()
     const category: Category = {
       id: generateId(),
       name: body.name || "",
       description: body.description || "",
-      sort_order: typeof body.sort_order === "number" ? body.sort_order : 0,
+      sort_order: typeof body.sort_order === "number" ? body.sort_order : data.categories.length,
       links: body.links || [],
       children: body.children || [],
     }
     ensureIds({ categories: [category] })
-    data.categories.push(category)
+    if (body.parentId) {
+      const parent = findCategory(data, body.parentId)
+      if (!parent) {
+        return c.json({ error: "Parent category not found" }, 404)
+      }
+      parent.children.push(category)
+    } else {
+      data.categories.push(category)
+    }
     await writeData(data)
     return c.json(category, 201)
   } catch (err) {

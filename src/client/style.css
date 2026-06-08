@@ -49,3 +49,130 @@ button, a, input, select, textarea {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Header – prevent DevUI's flex:auto from overriding Tailwind's flex-none */
+.devui-layout__header {
+  flex: none !important;
+}
+
+/* Splitter bar – dark color instead of white */
+.devui-splitter__bar {
+  background-color: var(--pin-border) !important;
+}
+
+/* Center collapse buttons vertically on the bar */
+.devui-splitter__bar--horizontal .prev.devui-splitter__collapse {
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* Collapse button background – dark */
+.devui-splitter__bar .devui-splitter__collapse {
+  background-color: var(--pin-border) !important;
+}
+
+/* Collapse button arrow lines – dark */
+.devui-splitter__bar .devui-splitter__collapse:before,
+.devui-splitter__bar .devui-splitter__collapse:after {
+  background: var(--pin-ink-muted) !important;
+}
+
+/* Hide the "next" button (would collapse content area) */
+.devui-splitter__bar--horizontal .devui-splitter__collapse.next {
+  display: none !important;
+}
+
+/* Tree node styles – match original CategoryTabs look */
+.devui-tree__node .devui-tree__node-content {
+  padding: 4px 6px !important;
+  border-radius: 8px !important;
+}
+
+.devui-tree__node .devui-tree__node-content:hover {
+  background-color: var(--pin-surface-hover) !important;
+}
+
+.devui-tree__node .devui-tree__node-title {
+  color: inherit !important;
+}
+
+.devui-tree__node-folder {
+  color: var(--pin-ink-muted) !important;
+  font-size: 14px !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+}
+
+.devui-tree-node__indent {
+  width: 20px !important;
+  height: 20px !important;
+  display: inline-block !important;
+  margin: 0 !important;
+}
+
+.devui-tree__node {
+  height: auto !important;
+  min-height: 36px !important;
+  color: var(--pin-ink) !important;
+}
+
+.devui-tree__node-content--value-wrapper {
+  height: auto !important;
+  min-height: 32px !important;
+}
+
+/* Dialog colors – match dark theme */
+.devui-modal {
+  background-color: var(--pin-surface) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+.devui-modal-content {
+  background: var(--pin-surface) !important;
+}
+
+.devui-modal__header {
+  color: var(--pin-ink) !important;
+}
+
+.devui-modal__body {
+  color: var(--pin-ink) !important;
+}
+
+.devui-fixed-overlay {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Input fields inside dialogs – dark theme */
+.d-input,
+.devui-input__wrapper {
+  background-color: var(--pin-bg) !important;
+  border-color: var(--pin-border) !important;
+  color: var(--pin-ink) !important;
+}
+
+.devui-input__inner {
+  color: var(--pin-ink) !important;
+}
+
+/* Dialog footer buttons */
+.d-button--outline {
+  color: var(--pin-ink-muted) !important;
+  border-color: var(--pin-border) !important;
+  background: transparent !important;
+}
+
+.d-button--outline:hover {
+  background: var(--pin-surface-hover) !important;
+}
+
+.d-button--primary {
+  background: var(--pin-accent) !important;
+  color: var(--pin-accent-text) !important;
+  border-color: var(--pin-accent) !important;
+}

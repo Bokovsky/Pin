@@ -104,7 +104,7 @@ async function handleSubmit() {
         v-if="!link"
         v-model="categoryId"
         placeholder="选择分类 *"
-        :options="allCategories.map(c => ({ value: c.id, label: c.label }))"
+        :options="allCategories.map(c => ({ value: c.id, name: c.label }))"
       />
 
       <p v-if="errorMsg" class="text-sm" style="color: var(--pin-danger)">{{ errorMsg }}</p>

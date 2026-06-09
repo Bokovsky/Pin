@@ -12,6 +12,7 @@
   --pin-accent-text: #ffffff;
   --pin-danger: #e03131;
   --pin-success: #2f9e44;
+  --pin-sidebar: var(--pin-surface);
 
   color-scheme: light;
 }

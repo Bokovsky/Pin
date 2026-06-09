@@ -137,7 +137,7 @@ onMounted(refreshData)
           minSize="0px"
           :collapsible="true"
         >
-          <div class="h-full overflow-y-auto px-2 py-3" style="background: color-mix(in srgb, var(--pin-surface) 95%, transparent)">
+          <div class="h-full overflow-y-auto px-2 py-3" style="background: var(--pin-sidebar)">
             <d-tree :data="treeData" @node-click="scrollToCategory">
               <template #content="{ nodeData }">
                 <span style="font-size: 17px">{{ nodeData.label }}</span>

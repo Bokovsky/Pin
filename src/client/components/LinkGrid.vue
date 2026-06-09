@@ -37,13 +37,7 @@ async function onDrop(cat: Category, index: number) {
 <template>
   <div class="space-y-8">
     <section v-for="cat in categories" :key="cat.id" :id="'cat-' + cat.id" class="scroll-mt-16">
-      <div class="flex items-center justify-between mb-3">
-        <h2 style="color: var(--pin-ink); font-size: 18px; font-weight: 400">{{ cat.name }}</h2>
-        <button
-          @click="emit('add-link', cat.id)"
-          class="text-xs text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink)] transition-colors px-2 py-1 rounded hover:bg-[var(--pin-surface-hover)]"
-        >+ 添加</button>
-      </div>
+      <h2 style="color: var(--pin-ink); font-size: 18px; font-weight: 400; margin-bottom: 12px">{{ cat.name }}</h2>
 
       <!-- Main category links -->
       <div v-if="cat.links.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
@@ -63,10 +57,6 @@ async function onDrop(cat: Category, index: number) {
       <div v-for="child in cat.children" :key="child.id" :id="'cat-' + child.id" class="mt-6 ml-4 scroll-mt-14">
         <div class="flex items-center justify-between mb-2">
           <h3 style="color: var(--pin-ink-secondary); font-size: 16px; font-weight: 400">{{ child.name }}</h3>
-          <button
-            @click="emit('add-link', child.id)"
-            class="text-xs text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink-secondary)] transition-colors px-2 py-0.5 rounded hover:bg-[var(--pin-surface-hover)]"
-          >+</button>
         </div>
         <div v-if="child.links.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           <div

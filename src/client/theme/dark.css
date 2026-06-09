@@ -1,9 +1,9 @@
 [data-theme="dark"] {
-  --pin-bg: #0a0a0f;
-  --pin-surface: #111118;
-  --pin-surface-hover: #1a1a24;
-  --pin-border: #2a2a3a;
-  --pin-border-hover: #3a3a4a;
+  --pin-bg: #0f1a20;
+  --pin-surface: #1f2623;
+  --pin-surface-hover: #2a3330;
+  --pin-border: #353f3a;
+  --pin-border-hover: #3a4540;
   --pin-ink: #e5e5e5;
   --pin-ink-secondary: #a0a0b0;
   --pin-ink-muted: #6b7280;
@@ -12,17 +12,18 @@
   --pin-accent-text: #0a0a0f;
   --pin-danger: #ff6b6b;
   --pin-success: #51cf66;
+  --pin-sidebar: #2b333e;
 
   color-scheme: dark;
 }
 
 :root:not([data-theme]),
 :root:not([data-theme="light"]) {
-  --pin-bg: #0a0a0f;
-  --pin-surface: #111118;
-  --pin-surface-hover: #1a1a24;
-  --pin-border: #2a2a3a;
-  --pin-border-hover: #3a3a4a;
+  --pin-bg: #0f1a20;
+  --pin-surface: #1f2623;
+  --pin-surface-hover: #2a3330;
+  --pin-border: #353f3a;
+  --pin-border-hover: #3a4540;
   --pin-ink: #e5e5e5;
   --pin-ink-secondary: #a0a0b0;
   --pin-ink-muted: #6b7280;
@@ -31,5 +32,6 @@
   --pin-accent-text: #0a0a0f;
   --pin-danger: #ff6b6b;
   --pin-success: #51cf66;
+  --pin-sidebar: #2b333e;
   color-scheme: dark;
 }

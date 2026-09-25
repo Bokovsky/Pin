@@ -50,6 +50,10 @@ export async function reorderLinks(items: ReorderItem[]): Promise<void> {
   await request("/reorder", { method: "POST", body: JSON.stringify(items) })
 }
 
+export async function moveLink(linkId: string, move: { targetCategoryId: string; targetIndex: number }): Promise<Link> {
+  return request<Link>(`/link/${linkId}/move`, { method: "POST", body: JSON.stringify(move) })
+}
+
 export async function importData(data: NavData): Promise<void> {
   await request("/import", { method: "POST", body: JSON.stringify(data) })
 }

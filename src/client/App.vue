@@ -9,13 +9,21 @@ import LinkEditor from "./components/LinkEditor.vue"
 import CategoryEditor from "./components/CategoryEditor.vue"
 import ImportDialog from "./components/ImportDialog.vue"
 import CategoryManager from "./components/CategoryManager.vue"
+import { filterCategoriesByQuery, resolveCategoryAnchorId } from "./searchFilter"
+import { findFirstVisibleLink } from "./searchEngine"
+import {
+  createDataLoadState,
+  failDataRefresh,
+  finishDataRefresh,
+  startDataRefresh,
+  type DataLoadState,
+} from "./loadingState"
 import { FolderKanban, Sun, Moon, Monitor, Upload } from "lucide-vue-next"
 import { useTheme } from "./composables/useTheme"
 
 const data = ref<NavData>({ categories: [] })
 const searchQuery = ref("")
-const loading = ref(true)
-const error = ref("")
+const loadState = ref<DataLoadState>({ ...createDataLoadState(), initialLoading: true })
 const showLinkEditor = ref(false)
 const editingLink = ref<any>(null)
 const showCategoryEditor = ref(false)
@@ -25,31 +33,10 @@ const showCategoryManager = ref(false)
 
 const { theme, resolved, cycleTheme, themeLabel } = useTheme()
 
-const filteredCategories = computed(() => {
-  if (!searchQuery.value) return data.value.categories
-  const q = searchQuery.value.toLowerCase()
-  const result: typeof data.value.categories = []
-
-  for (const cat of data.value.categories) {
-    const catLinks = cat.links.filter(l =>
-      l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q) || l.url.toLowerCase().includes(q)
-    )
-    const children = cat.children.map(child => ({
-      ...child,
-      links: child.links.filter(l =>
-        l.title.toLowerCase().includes(q) || l.description.toLowerCase().includes(q) || l.url.toLowerCase().includes(q)
-      ),
-    })).filter(child => child.links.length > 0)
-    const hasLinks = catLinks.length > 0 || children.length > 0
-    if (hasLinks) {
-      result.push({ ...cat, links: catLinks, children })
-    }
-  }
-  return result
-})
+const filteredCategories = computed(() => filterCategoriesByQuery(data.value.categories, searchQuery.value))
 
 const treeData = computed(() =>
-  data.value.categories.map(cat => ({
+  filteredCategories.value.map(cat => ({
     label: cat.name,
     id: cat.id,
     level: 0,
@@ -62,13 +49,24 @@ const treeData = computed(() =>
   }))
 )
 
-function refreshData() {
-  loading.value = true
-  error.value = ""
-  fetchNav()
-    .then(d => { data.value = d })
-    .catch(e => { error.value = e.message })
-    .finally(() => { loading.value = false })
+async function loadInitialData() {
+  startDataRefresh(loadState.value, "initial")
+  try {
+    data.value = await fetchNav()
+    finishDataRefresh(loadState.value, "initial")
+  } catch (e: unknown) {
+    failDataRefresh(loadState.value, "initial", e instanceof Error ? e : new Error("加载失败"))
+  }
+}
+
+async function refreshData() {
+  startDataRefresh(loadState.value, "background")
+  try {
+    data.value = await fetchNav()
+    finishDataRefresh(loadState.value, "background")
+  } catch (e: unknown) {
+    failDataRefresh(loadState.value, "background", e instanceof Error ? e : new Error("刷新失败"))
+  }
 }
 
 function handleAddLink(categoryId?: string) {
@@ -82,23 +80,39 @@ function handleEditLink(link: any) {
 }
 
 async function handleDeleteLink(link: any) {
-  if (confirm("确认删除此链接？")) {
+  if (!confirm("确认删除此链接？")) {
+    return
+  }
+  try {
     const { deleteLink } = await import("./api")
     await deleteLink(link.id)
-    refreshData()
+    await refreshData()
+  } catch (e: unknown) {
+    failDataRefresh(loadState.value, "background", e instanceof Error ? e : new Error("删除失败"))
   }
 }
 
-function scrollToCategory(node: any) {
-  const el = document.getElementById("cat-" + node.id)
+function scrollToCategory(node: unknown) {
+  const categoryId = resolveCategoryAnchorId(node)
+  if (!categoryId) {
+    return
+  }
+  const el = document.getElementById("cat-" + categoryId)
   el?.scrollIntoView({ behavior: "smooth", block: "start" })
 }
 
-onMounted(refreshData)
+function openFirstSearchResult() {
+  const link = findFirstVisibleLink(filteredCategories.value)
+  if (link) {
+    window.open(link.url, "_blank")
+  }
+}
+
+onMounted(loadInitialData)
 </script>
 
 <template>
-  <d-layout class="min-h-screen">
+  <d-layout class="h-screen overflow-hidden">
     <d-header class="flex-none flex items-center gap-4 px-6 py-3 bg-[var(--pin-surface)]/80 backdrop-blur border-b border-[var(--pin-border)]">
       <!-- Logo -->
       <div class="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0"
@@ -106,10 +120,10 @@ onMounted(refreshData)
         <span class="text-xl" style="color: var(--pin-accent); font-weight: 400">Pin</span>
       </div>
 
-      <!-- Centered search -->
-      <div class="flex-1 flex justify-center">
-        <SearchBar v-model="searchQuery" />
-      </div>
+        <!-- Centered search -->
+        <div class="flex-1 flex justify-center">
+          <SearchBar v-model="searchQuery" @submit-first="openFirstSearchResult" />
+        </div>
 
       <!-- Right actions -->
       <div class="flex items-center gap-3 flex-shrink-0">
@@ -129,13 +143,14 @@ onMounted(refreshData)
       </div>
     </d-header>
 
-    <d-splitter class="flex-1">
+    <d-splitter class="flex-1 min-h-0">
       <template v-slot:DSplitterPane>
         <d-splitter-pane
           collapseDirection="before"
           size="240px"
           minSize="0px"
           :collapsible="true"
+          class="min-h-0"
         >
           <div class="h-full overflow-y-auto px-2 py-3" style="background: var(--pin-sidebar)">
             <d-tree :data="treeData" @node-click="scrollToCategory">
@@ -150,9 +165,9 @@ onMounted(refreshData)
             </button>
           </div>
         </d-splitter-pane>
-        <d-splitter-pane>
-          <div class="h-full overflow-y-auto px-6 py-6 pb-16">
-        <div v-if="loading" class="space-y-6 px-6 py-6">
+        <d-splitter-pane class="min-h-0">
+          <div class="h-full overflow-y-auto px-6 py-6 pb-16" data-pin-content>
+        <div v-if="loadState.initialLoading" class="space-y-6 px-6 py-6">
           <div v-for="i in 3" :key="i" class="space-y-3">
             <div class="h-5 w-24 rounded animate-pulse" style="background: var(--pin-surface-hover)" />
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
@@ -160,13 +175,14 @@ onMounted(refreshData)
             </div>
           </div>
         </div>
-        <div v-else-if="error" class="text-center py-20 text-[var(--pin-danger)]">{{ error }}</div>
+        <div v-else-if="loadState.error" class="text-center py-20 text-[var(--pin-danger)]">{{ loadState.error }}</div>
         <div v-else-if="filteredCategories.length === 0" class="text-center py-20 text-[var(--pin-ink-muted)]">
           {{ searchQuery ? '无匹配结果' : '暂无链接，点击底部 + 按钮添加' }}
         </div>
         <LinkGrid
           v-else
           :categories="filteredCategories"
+          :search-query="searchQuery"
           @edit="handleEditLink"
           @delete="handleDeleteLink"
           @refresh="refreshData"

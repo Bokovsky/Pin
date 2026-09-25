@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { computed, onUnmounted, ref, watch } from "vue"
 import { Globe } from "lucide-vue-next"
 import type { Link } from "../types"
 import ContextMenu from "./ContextMenu.vue"
@@ -9,6 +9,15 @@ const emit = defineEmits<{ edit: [link: Link]; delete: [link: Link] }>()
 
 const showMenu = ref(false)
 const menuPos = ref({ x: 0, y: 0 })
+const copyMessage = ref("")
+let copyTimer: number | undefined
+
+watch(
+  () => props.link.url,
+  () => {
+    faviconError.value = false
+  }
+)
 
 const statusStyle = computed(() => {
   switch (props.link.status) {
@@ -42,15 +51,42 @@ function onContextMenu(e: MouseEvent) {
   menuPos.value = { x: e.clientX, y: e.clientY }
   showMenu.value = true
 }
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault()
+    openLink()
+  }
+}
+
+function handleCopyFailed(message: string) {
+  copyMessage.value = message
+  if (copyTimer !== undefined) {
+    clearTimeout(copyTimer)
+  }
+  copyTimer = window.setTimeout(() => {
+    copyMessage.value = ""
+  }, 3000)
+}
+
+onUnmounted(() => {
+  if (copyTimer !== undefined) {
+    clearTimeout(copyTimer)
+  }
+})
 </script>
 
 <template>
   <div
+    role="link"
+    tabindex="0"
     @click="openLink"
     @contextmenu="onContextMenu"
+    @keydown="onKeydown"
     class="relative bg-[var(--pin-surface)] hover:bg-[var(--pin-surface-hover)] border border-[var(--pin-border)]
            hover:border-[var(--pin-border-hover)] rounded-lg p-3 cursor-pointer
-           transition-all duration-150 hover:shadow-lg select-none"
+           transition-all duration-150 hover:shadow-lg select-none
+           focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--pin-accent)]"
   >
     <div v-if="link.status" :style="statusStyle"
          class="absolute top-2 right-2 w-2 h-2 rounded-full"
@@ -64,7 +100,7 @@ function onContextMenu(e: MouseEvent) {
       </div>
       <div class="min-w-0 flex-1">
         <p class="truncate" style="color: var(--pin-ink); font-size: 16px">{{ link.title }}</p>
-        <p class="truncate mt-0.5" :class="link.description ? '' : 'invisible'" style="color: var(--pin-ink-muted); font-size: 14px">{{ link.description || '描述' }}</p>
+        <p class="truncate mt-0.5" :class="link.description ? '' : 'invisible'" :aria-hidden="link.description ? 'false' : 'true'" style="color: var(--pin-ink-muted); font-size: 14px">{{ link.description || '描述' }}</p>
       </div>
     </div>
 
@@ -75,6 +111,15 @@ function onContextMenu(e: MouseEvent) {
       @close="showMenu = false"
       @edit="emit('edit', link)"
       @delete="emit('delete', link)"
+      @copy-failed="handleCopyFailed"
     />
+    <div
+      v-if="copyMessage"
+      role="alert"
+      class="absolute left-2 right-2 bottom-2 rounded-md border border-[var(--pin-danger)] px-2 py-1 text-xs"
+      style="background: var(--pin-surface); color: var(--pin-danger)"
+    >
+      {{ copyMessage }}
+    </div>
   </div>
 </template>

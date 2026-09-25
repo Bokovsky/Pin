@@ -3,6 +3,7 @@ import { ref } from "vue"
 import { Plus, Pencil, Trash2, Check, X } from "lucide-vue-next"
 import type { Category } from "../types"
 import { createCategory, updateCategory, deleteCategory } from "../api"
+import { toOperationErrorMessage } from "../operationError"
 
 defineProps<{ open: boolean; categories: Category[] }>()
 const emit = defineEmits<{ close: []; saved: [] }>()
@@ -12,6 +13,7 @@ const newParentId = ref("")
 const editingId = ref("")
 const editName = ref("")
 const submitting = ref(false)
+const errorMessage = ref("")
 
 function resetNew() {
   newName.value = ""
@@ -26,6 +28,7 @@ function startAdd(parentId?: string) {
 async function handleAdd() {
   if (!newName.value.trim()) return
   submitting.value = true
+  errorMessage.value = ""
   try {
     const payload: any = { name: newName.value, description: "" }
     if (newParentId.value) {
@@ -34,6 +37,8 @@ async function handleAdd() {
     await createCategory(payload)
     emit("saved")
     resetNew()
+  } catch (error: unknown) {
+    errorMessage.value = toOperationErrorMessage(error, "添加分类失败")
   } finally {
     submitting.value = false
   }
@@ -47,10 +52,13 @@ function startEdit(id: string, name: string) {
 async function handleSave(id: string) {
   if (!editName.value.trim()) return
   submitting.value = true
+  errorMessage.value = ""
   try {
     await updateCategory(id, { name: editName.value })
     editingId.value = ""
     emit("saved")
+  } catch (error: unknown) {
+    errorMessage.value = toOperationErrorMessage(error, "保存分类失败")
   } finally {
     submitting.value = false
   }
@@ -63,9 +71,12 @@ function cancelEdit() {
 async function handleDelete(id: string, name: string) {
   if (!confirm(`确认删除分类「${name}」及其下所有链接？`)) return
   submitting.value = true
+  errorMessage.value = ""
   try {
     await deleteCategory(id)
     emit("saved")
+  } catch (error: unknown) {
+    errorMessage.value = toOperationErrorMessage(error, "删除分类失败")
   } finally {
     submitting.value = false
   }
@@ -92,6 +103,8 @@ async function handleDelete(id: string, name: string) {
       <button v-else @click="startAdd()" class="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-[var(--pin-surface-hover)] transition-colors text-sm" style="color: var(--pin-accent)">
         <Plus class="h-4 w-4" /> 添加分类
       </button>
+
+      <p v-if="errorMessage" role="alert" class="text-sm" style="color: var(--pin-danger)">{{ errorMessage }}</p>
 
       <!-- Category list -->
       <div class="space-y-1 max-h-80 overflow-y-auto">

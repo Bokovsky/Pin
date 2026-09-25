@@ -1,5 +1,6 @@
 import { Hono } from "hono"
 import { readData, writeData, generateId, type NavData, type Category, type Link } from "./data"
+import { applyLinkMove, applyReorder } from "./linkMoves"
 
 export const apiRoutes = new Hono()
 
@@ -190,6 +191,30 @@ apiRoutes.delete("/link/:id", async (c) => {
   }
 })
 
+apiRoutes.post("/link/:id/move", async (c) => {
+  try {
+    const id = c.req.param("id")
+    const body = await c.req.json<{ targetCategoryId: string; targetIndex: number }>()
+    if (typeof body.targetCategoryId !== "string" || !Number.isInteger(body.targetIndex) || body.targetIndex < 0) {
+      return c.json({ error: "Invalid move target" }, 400)
+    }
+    const data = await readData()
+    const moved = applyLinkMove(data, { linkId: id, targetCategoryId: body.targetCategoryId, targetIndex: body.targetIndex })
+    const target = findCategory(moved, body.targetCategoryId)
+    const link = target?.links.find((item) => item.id === id)
+    await writeData(moved)
+    return c.json(link)
+  } catch (err) {
+    if (err instanceof Error && err.message === "Link not found") {
+      return c.json({ error: "Link not found" }, 404)
+    }
+    if (err instanceof Error && err.message === "Target category not found") {
+      return c.json({ error: "Target category not found" }, 404)
+    }
+    return c.json({ error: "Failed to move link" }, 500)
+  }
+})
+
 apiRoutes.post("/check", async (c) => {
   try {
     const data = await readData()
@@ -223,14 +248,7 @@ apiRoutes.post("/reorder", async (c) => {
   try {
     const body = await c.req.json<Array<{ id: string; sort_order: number }>>()
     const data = await readData()
-    const allLinks = collectAllLinks(data)
-    const linkMap = new Map(allLinks.map((l) => [l.id, l]))
-    for (const { id, sort_order } of body) {
-      const link = linkMap.get(id)
-      if (link) {
-        link.sort_order = sort_order
-      }
-    }
+    applyReorder(data, body)
     await writeData(data)
     return c.json({ success: true })
   } catch (err) {

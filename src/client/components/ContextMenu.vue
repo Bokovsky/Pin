@@ -1,27 +1,60 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from "vue"
+import { nextTick, onMounted, onUnmounted, ref } from "vue"
+import { clampContextMenuPosition } from "../contextMenuPosition"
 import { ExternalLink, Link2, Copy, QrCode, Pencil, Trash2 } from "lucide-vue-next"
 import type { Link } from "../types"
 
-defineProps<{ link: Link; position: { x: number; y: number } }>()
-const emit = defineEmits<{ close: []; edit: [link: Link]; delete: [link: Link] }>()
+const props = defineProps<{ link: Link; position: { x: number; y: number } }>()
+const emit = defineEmits<{ close: []; edit: [link: Link]; delete: [link: Link]; "copy-failed": [message: string] }>()
+const menuRef = ref<HTMLElement | null>(null)
+const menuPosition = ref(props.position)
 
 function openUrl(url: string) { window.open(url, "_blank"); emit("close") }
-async function copyUrl(url: string) { await navigator.clipboard.writeText(url); emit("close") }
+async function copyUrl(url: string) {
+  try {
+    await navigator.clipboard.writeText(url)
+    emit("close")
+  } catch {
+    emit("copy-failed", "复制失败，请手动复制链接")
+  }
+}
 function showQr(url: string) {
   window.open(`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}`, "_blank")
   emit("close")
 }
 function handleClick() { emit("close") }
+function handleKeydown(event: KeyboardEvent) {
+  if (event.key === "Escape") {
+    emit("close")
+  }
+}
 
-onMounted(() => document.addEventListener("click", handleClick))
-onUnmounted(() => document.removeEventListener("click", handleClick))
+onMounted(async () => {
+  document.addEventListener("click", handleClick)
+  document.addEventListener("keydown", handleKeydown)
+  window.addEventListener("scroll", handleClick, true)
+  await nextTick()
+  const rect = menuRef.value?.getBoundingClientRect()
+  if (rect) {
+    menuPosition.value = clampContextMenuPosition({
+      position: props.position,
+      menuSize: { width: rect.width, height: rect.height },
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+    })
+  }
+})
+onUnmounted(() => {
+  document.removeEventListener("click", handleClick)
+  document.removeEventListener("keydown", handleKeydown)
+  window.removeEventListener("scroll", handleClick, true)
+})
 </script>
 
 <template>
   <div
+    ref="menuRef"
     class="fixed z-[100] bg-[var(--pin-surface)] border border-[var(--pin-border)] rounded-lg shadow-xl py-1 min-w-[160px]"
-    :style="{ left: position.x + 'px', top: position.y + 'px', fontFamily: 'system-ui, sans-serif' }"
+    :style="{ left: menuPosition.x + 'px', top: menuPosition.y + 'px', fontFamily: 'system-ui, sans-serif' }"
     @click.stop
   >
     <button @click="openUrl(link.url)"

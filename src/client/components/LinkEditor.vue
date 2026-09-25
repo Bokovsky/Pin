@@ -2,6 +2,8 @@
 import { ref, computed, watch } from "vue"
 import type { Link, Category } from "../types"
 import { createLink, updateLink } from "../api"
+import { resolveLinkEditorMode } from "../linkEditorState"
+import { toOperationErrorMessage } from "../operationError"
 
 const props = defineProps<{
   open: boolean
@@ -31,11 +33,12 @@ const allCategories = computed(() => {
   return result
 })
 
+const editorMode = computed(() => resolveLinkEditorMode(props.link, allCategories.value.map(category => category.id)))
+
 watch(() => props.open, (val) => {
   if (val) {
     errorMsg.value = ""
-    const preset = props.link && "_categoryId" in props.link ? (props.link as any)._categoryId : null
-    if (props.link && !preset) {
+    if (editorMode.value.mode === "edit" && props.link && "id" in props.link) {
       title.value = props.link.title
       url.value = props.link.url
       description.value = props.link.description
@@ -47,10 +50,8 @@ watch(() => props.open, (val) => {
       description.value = ""
       backupUrl.value = ""
       sortOrder.value = 0
-      if (preset && allCategories.value.some(c => c.id === preset)) {
-        categoryId.value = preset
-      } else if (allCategories.value.length > 0) {
-        categoryId.value = allCategories.value[0].id
+      if (editorMode.value.initialCategoryId) {
+        categoryId.value = editorMode.value.initialCategoryId
       }
     }
   }
@@ -61,8 +62,8 @@ async function handleSubmit() {
   submitting.value = true
   errorMsg.value = ""
   try {
-    if (props.link) {
-      await updateLink(props.link.id, {
+    if (editorMode.value.mode === "edit" && editorMode.value.linkId) {
+      await updateLink(editorMode.value.linkId, {
         title: title.value,
         url: url.value,
         description: description.value,
@@ -85,8 +86,8 @@ async function handleSubmit() {
     }
     emit("saved")
     emit("close")
-  } catch (e: any) {
-    errorMsg.value = e.message || "保存失败"
+  } catch (e: unknown) {
+    errorMsg.value = toOperationErrorMessage(e, "保存失败")
   } finally {
     submitting.value = false
   }
@@ -94,14 +95,14 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <d-modal :model-value="open" :title="link ? '编辑链接' : '添加链接'" @update:model-value="emit('close')" :close-on-click-overlay="true">
+  <d-modal :model-value="open" :title="editorMode.mode === 'edit' ? '编辑链接' : '添加链接'" @update:model-value="emit('close')" :close-on-click-overlay="true">
     <form @submit.prevent="handleSubmit" class="space-y-3">
       <d-input v-model="title" placeholder="标题 *" />
       <d-input v-model="url" placeholder="URL *" type="url" />
       <d-input v-model="description" placeholder="描述（可选）" />
       <d-input v-model="backupUrl" placeholder="备用链接（可选）" type="url" />
       <d-select
-        v-if="!link"
+        v-if="editorMode.mode === 'create'"
         v-model="categoryId"
         placeholder="选择分类 *"
         :options="allCategories.map(c => ({ value: c.id, name: c.label }))"
@@ -112,7 +113,7 @@ async function handleSubmit() {
       <div class="flex justify-end gap-2 pt-2">
         <d-button @click="emit('close')" variant="outline" :disabled="submitting">取消</d-button>
         <d-button type="submit" variant="primary" :disabled="submitting">
-          {{ submitting ? '保存中...' : (link ? '保存' : '添加') }}
+          {{ submitting ? '保存中...' : (editorMode.mode === 'edit' ? '保存' : '添加') }}
         </d-button>
       </div>
     </form>

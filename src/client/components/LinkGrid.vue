@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue"
-import { reorderLinks } from "../api"
+import { moveLink, reorderLinks } from "../api"
 import type { Category, Link } from "../types"
+import { buildContainerLinkOrder, canStartLinkDrag } from "../linkReorder"
 import LinkCard from "./LinkCard.vue"
 
 defineProps<{
   categories: Category[]
+  searchQuery: string
 }>()
 
 const emit = defineEmits<{
@@ -15,27 +17,39 @@ const emit = defineEmits<{
   "add-link": [categoryId?: string]
 }>()
 
-const dragFrom = ref<{ catId: string; index: number } | null>(null)
+const dragFrom = ref<{ catId: string; index: number; linkId: string } | null>(null)
+const dropError = ref("")
 
-function collectLinks(cat: Category): Link[] {
-  return [...cat.links, ...cat.children.flatMap(c => c.links)]
-}
-
-async function onDrop(cat: Category, index: number) {
-  if (!dragFrom.value) return
-  const allLinks = collectLinks(cat)
-  if (index < 0 || index >= allLinks.length) { dragFrom.value = null; return }
-  const items = [...allLinks]
-  const [moved] = items.splice(dragFrom.value.index, 1)
-  items.splice(index, 0, moved)
-  await reorderLinks(items.map((link, i) => ({ id: link.id, sort_order: i })))
-  emit("refresh")
+async function onDrop(target: Category, index: number) {
+  const started = dragFrom.value
   dragFrom.value = null
+  if (!started) {
+    return
+  }
+  dropError.value = ""
+  try {
+    if (started.catId === target.id) {
+      const orderedLinkIds = buildContainerLinkOrder(
+        target.links.map(link => link.id),
+        started.index,
+        index
+      )
+      await reorderLinks(orderedLinkIds.map((id, sort_order) => ({ id, sort_order })))
+    } else {
+      await moveLink(started.linkId, { targetCategoryId: target.id, targetIndex: index })
+    }
+    emit("refresh")
+  } catch (error: any) {
+    dropError.value = error?.message || "排序失败"
+  }
 }
 </script>
 
 <template>
   <div class="space-y-8">
+    <div v-if="dropError" role="alert" class="rounded-lg border border-[var(--pin-danger)] px-3 py-2 text-sm" style="color: var(--pin-danger)">
+      {{ dropError }}
+    </div>
     <section v-for="cat in categories" :key="cat.id" :id="'cat-' + cat.id" class="scroll-mt-16">
       <h2 style="color: var(--pin-ink); font-size: 18px; font-weight: 400; margin-bottom: 12px">{{ cat.name }}</h2>
 
@@ -44,9 +58,10 @@ async function onDrop(cat: Category, index: number) {
         <div
           v-for="(link, idx) in cat.links"
           :key="link.id"
-          draggable="true"
-          @dragstart="dragFrom = { catId: cat.id, index: idx }"
+          :draggable="canStartLinkDrag(searchQuery)"
+          @dragstart="dragFrom = { catId: cat.id, index: idx, linkId: link.id }"
           @dragover.prevent
+          @dragend="dragFrom = null"
           @drop.prevent="onDrop(cat, idx)"
         >
           <LinkCard :link="link" @edit="emit('edit', $event)" @delete="emit('delete', $event)" />
@@ -62,9 +77,10 @@ async function onDrop(cat: Category, index: number) {
           <div
             v-for="(link, idx) in child.links"
             :key="link.id"
-            draggable="true"
-            @dragstart="dragFrom = { catId: child.id, index: idx }"
+            :draggable="canStartLinkDrag(searchQuery)"
+            @dragstart="dragFrom = { catId: child.id, index: idx, linkId: link.id }"
             @dragover.prevent
+            @dragend="dragFrom = null"
             @drop.prevent="onDrop(child, idx)"
           >
             <LinkCard :link="link" @edit="emit('edit', $event)" @delete="emit('delete', $event)" />

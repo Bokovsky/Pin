@@ -1,29 +1,47 @@
 <script setup lang="ts">
-import { ref } from "vue"
+import { onUnmounted, ref } from "vue"
 import { Plus, ArrowUp, Activity } from "lucide-vue-next"
 import { checkLinks } from "../api"
+import { scrollContentToTop } from "../scrollTarget"
 
 const emit = defineEmits<{ "add-link": []; refresh: [] }>()
 const checking = ref(false)
 const checkSummary = ref<{ ok: number; fail: number } | null>(null)
+const checkError = ref("")
+let summaryTimer: number | undefined
+
+function clearSummaryTimer() {
+  if (summaryTimer !== undefined) {
+    clearTimeout(summaryTimer)
+    summaryTimer = undefined
+  }
+}
 
 async function handleCheck() {
   checking.value = true
   checkSummary.value = null
+  checkError.value = ""
+  clearSummaryTimer()
   try {
     const results = await checkLinks()
     const ok = results.filter(r => r.status === "ok").length
     const fail = results.filter(r => r.status === "fail").length
     checkSummary.value = { ok, fail }
-    setTimeout(() => { checkSummary.value = null }, 5000)
+    summaryTimer = window.setTimeout(() => { checkSummary.value = null }, 5000)
+    emit("refresh")
+  } catch (error: unknown) {
+    checkError.value = error instanceof Error ? error.message : "检测失败"
   } finally {
     checking.value = false
-    emit("refresh")
   }
 }
 
+onUnmounted(clearSummaryTimer)
+
 function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: "smooth" })
+  scrollContentToTop(document, () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  })
 }
 </script>
 
@@ -34,6 +52,14 @@ function scrollToTop() {
   >
     <span style="color: var(--pin-success)">{{ checkSummary.ok }} 个正常</span>
     <span v-if="checkSummary.fail > 0" style="color: var(--pin-danger)">{{ checkSummary.fail }} 个失效</span>
+  </div>
+  <div
+    v-else-if="checkError"
+    role="alert"
+    class="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 border border-[var(--pin-danger)] rounded-lg px-4 py-2 shadow-lg text-sm"
+    style="background: var(--pin-surface); color: var(--pin-danger)"
+  >
+    {{ checkError }}
   </div>
 
   <div class="flex items-center gap-1">

@@ -18,8 +18,9 @@ import {
   startDataRefresh,
   type DataLoadState,
 } from "./loadingState"
-import { FolderKanban, Sun, Moon, Monitor, Upload } from "lucide-vue-next"
+import { FolderKanban, Upload, ChevronsLeft, ChevronsRight } from "lucide-vue-next"
 import { useTheme } from "./composables/useTheme"
+import { toSidebarNodes } from "./sidebarTree"
 
 const data = ref<NavData>({ categories: [] })
 const searchQuery = ref("")
@@ -30,24 +31,22 @@ const showCategoryEditor = ref(false)
 const editingCategory = ref<any>(null)
 const showImport = ref(false)
 const showCategoryManager = ref(false)
+const sidebarOpen = ref(false)
 
-const { theme, resolved, cycleTheme, themeLabel } = useTheme()
+function toggleSidebar() {
+  sidebarOpen.value = !sidebarOpen.value
+}
+
+const { resolved, setTheme } = useTheme()
+
+const checked = computed({
+  get: () => resolved.value === "dark",
+  set: (value: boolean) => setTheme(value ? "dark" : "light"),
+})
 
 const filteredCategories = computed(() => filterCategoriesByQuery(data.value.categories, searchQuery.value))
 
-const treeData = computed(() =>
-  filteredCategories.value.map(cat => ({
-    label: cat.name,
-    id: cat.id,
-    level: 0,
-    expanded: true,
-    children: cat.children.map(child => ({
-      label: child.name,
-      id: child.id,
-      level: 1,
-    })),
-  }))
-)
+const sidebarNodes = computed(() => toSidebarNodes(filteredCategories.value))
 
 async function loadInitialData() {
   startDataRefresh(loadState.value, "initial")
@@ -112,8 +111,8 @@ onMounted(loadInitialData)
 </script>
 
 <template>
-  <d-layout class="h-screen overflow-hidden">
-    <d-header class="flex-none flex items-center gap-4 px-6 py-3 bg-[var(--pin-surface)]/80 backdrop-blur border-b border-[var(--pin-border)]">
+  <div class="h-screen overflow-hidden flex flex-col">
+    <header class="pin-shell-header relative z-40 flex-none bg-[var(--pin-surface)]/80 backdrop-blur border-b border-[var(--pin-border)]">
       <!-- Logo -->
       <div class="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0"
            style="background: color-mix(in srgb, var(--pin-accent) 15%, transparent)">
@@ -121,56 +120,69 @@ onMounted(loadInitialData)
       </div>
 
         <!-- Centered search -->
-        <div class="flex-1 flex justify-center">
+        <div class="pin-search-wrap">
           <SearchBar v-model="searchQuery" @submit-first="openFirstSearchResult" />
         </div>
 
       <!-- Right actions -->
       <div class="flex items-center gap-3 flex-shrink-0">
-        <button @click="showImport = true"
-          class="px-3 py-2.5 rounded-xl hover:bg-[var(--pin-surface-hover)] text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink)] transition-colors flex items-center gap-1.5 text-sm"
-          title="导入/导出">
-          <Upload class="h-5 w-5" />
-          <span>导入/导出</span>
-        </button>
-        <button @click="cycleTheme"
-          class="p-2.5 rounded-xl hover:bg-[var(--pin-surface-hover)] text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink)] transition-colors"
-          :title="'主题: ' + themeLabel">
-          <Monitor v-if="theme === 'system'" class="h-5 w-5" />
-          <Sun v-else-if="resolved === 'light'" class="h-5 w-5" />
-          <Moon v-else class="h-5 w-5" />
+        <QTooltip content="导入/导出" position="bottom">
+          <button @click="showImport = true"
+            class="px-3 py-2.5 rounded-xl hover:bg-[var(--pin-surface-hover)] text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink)] transition-colors flex items-center gap-1.5 text-sm">
+            <Upload class="h-5 w-5" />
+            <span>导入/导出</span>
+          </button>
+        </QTooltip>
+        <QSwitch v-model="checked" theme="plastic" />
+      </div>
+    </header>
+
+    <div class="flex flex-1 min-h-0">
+      <aside
+        class="min-h-0 flex-none overflow-hidden transition-[width] duration-200"
+        :class="sidebarOpen ? 'w-[208px]' : 'w-0'"
+      >
+        <div class="h-full overflow-y-auto px-2 py-3 w-[208px]" style="background: var(--pin-sidebar)">
+          <nav aria-label="分类导航">
+            <ul class="space-y-0.5">
+              <li v-for="node in sidebarNodes" :key="node.id">
+                <button @click="scrollToCategory(node)" class="pin-tree-node">
+                  <span style="font-size: 17px">{{ node.label }}</span>
+                </button>
+                <ul v-if="node.children.length > 0" class="ml-5 space-y-0.5">
+                  <li v-for="child in node.children" :key="child.id">
+                    <button @click="scrollToCategory(child)" class="pin-tree-node">
+                      <span style="font-size: 17px">{{ child.label }}</span>
+                    </button>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </nav>
+          <button @click="showCategoryManager = true"
+            class="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[var(--pin-surface-hover)]"
+            style="color: var(--pin-ink-muted)">
+            <FolderKanban class="h-4 w-4" /> 管理分类
+          </button>
+        </div>
+      </aside>
+      <div class="pin-splitter" @click="toggleSidebar">
+        <button
+          @click.stop="toggleSidebar"
+          :aria-label="sidebarOpen ? '收起侧栏' : '展开侧栏'"
+          :title="sidebarOpen ? '收起侧栏' : '展开侧栏'"
+          class="pin-splitter-toggle"
+        >
+          <ChevronsLeft v-if="sidebarOpen" class="h-4 w-4" />
+          <ChevronsRight v-else class="h-4 w-4" />
         </button>
       </div>
-    </d-header>
-
-    <d-splitter class="flex-1 min-h-0">
-      <template v-slot:DSplitterPane>
-        <d-splitter-pane
-          collapseDirection="before"
-          size="240px"
-          minSize="0px"
-          :collapsible="true"
-          class="min-h-0"
-        >
-          <div class="h-full overflow-y-auto px-2 py-3" style="background: var(--pin-sidebar)">
-            <d-tree :data="treeData" @node-click="scrollToCategory">
-              <template #content="{ nodeData }">
-                <span style="font-size: 17px">{{ nodeData.label }}</span>
-              </template>
-            </d-tree>
-            <button @click="showCategoryManager = true"
-              class="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-[var(--pin-surface-hover)]"
-              style="color: var(--pin-ink-muted)">
-              <FolderKanban class="h-4 w-4" /> 管理分类
-            </button>
-          </div>
-        </d-splitter-pane>
-        <d-splitter-pane class="min-h-0">
-          <div class="h-full overflow-y-auto px-6 py-6 pb-16" data-pin-content>
+      <div class="flex-1 min-w-0 min-h-0">
+          <div class="pin-content" data-pin-content>
         <div v-if="loadState.initialLoading" class="space-y-6 px-6 py-6">
           <div v-for="i in 3" :key="i" class="space-y-3">
             <div class="h-5 w-24 rounded animate-pulse" style="background: var(--pin-surface-hover)" />
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div class="pin-link-grid">
               <div v-for="j in 6" :key="j" class="h-20 rounded-lg animate-pulse" style="background: var(--pin-surface-hover)" />
             </div>
           </div>
@@ -189,13 +201,12 @@ onMounted(loadInitialData)
           @add-link="handleAddLink"
         />
       </div>
-        </d-splitter-pane>
-      </template>
-    </d-splitter>
+      </div>
+    </div>
 
-    <d-footer class="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center bg-[var(--pin-surface)]/90 backdrop-blur border-t border-[var(--pin-border)] py-2">
+    <footer class="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-center bg-[var(--pin-surface)]/90 backdrop-blur border-t border-[var(--pin-border)] py-2">
       <Toolbar @add-link="handleAddLink()" @refresh="refreshData" />
-    </d-footer>
+    </footer>
 
     <LinkEditor
       :open="showLinkEditor"
@@ -225,5 +236,5 @@ onMounted(loadInitialData)
       @close="showCategoryManager = false"
       @saved="refreshData"
     />
-  </d-layout>
+  </div>
 </template>

@@ -47,14 +47,12 @@ async function onDrop(target: Category, index: number) {
 
 <template>
   <div class="space-y-8">
-    <div v-if="dropError" role="alert" class="rounded-lg border border-[var(--pin-danger)] px-3 py-2 text-sm" style="color: var(--pin-danger)">
-      {{ dropError }}
-    </div>
+    <QFence v-if="dropError" type="error" :text="dropError" role="alert" />
     <section v-for="cat in categories" :key="cat.id" :id="'cat-' + cat.id" class="scroll-mt-16">
       <h2 style="color: var(--pin-ink); font-size: 18px; font-weight: 400; margin-bottom: 12px">{{ cat.name }}</h2>
 
       <!-- Main category links -->
-      <div v-if="cat.links.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+      <div v-if="cat.links.length > 0" class="pin-link-grid">
         <div
           v-for="(link, idx) in cat.links"
           :key="link.id"
@@ -73,7 +71,7 @@ async function onDrop(target: Category, index: number) {
         <div class="flex items-center justify-between mb-2">
           <h3 style="color: var(--pin-ink-secondary); font-size: 16px; font-weight: 400">{{ child.name }}</h3>
         </div>
-        <div v-if="child.links.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+        <div v-if="child.links.length > 0" class="pin-link-grid">
           <div
             v-for="(link, idx) in child.links"
             :key="link.id"

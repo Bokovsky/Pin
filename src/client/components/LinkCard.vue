@@ -115,11 +115,9 @@ onUnmounted(() => {
     />
     <div
       v-if="copyMessage"
-      role="alert"
-      class="absolute left-2 right-2 bottom-2 rounded-md border border-[var(--pin-danger)] px-2 py-1 text-xs"
-      style="background: var(--pin-surface); color: var(--pin-danger)"
+      class="absolute left-2 right-2 bottom-2"
     >
-      {{ copyMessage }}
+      <QFence type="error" :text="copyMessage" role="alert" />
     </div>
   </div>
 </template>

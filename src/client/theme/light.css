@@ -13,6 +13,10 @@
   --pin-danger: #e03131;
   --pin-success: #2f9e44;
   --pin-sidebar: var(--pin-surface);
+  --pin-bg-decor:
+    radial-gradient(1200px 480px at 50% -10%, rgba(34, 139, 230, 0.06), transparent 70%),
+    radial-gradient(circle, rgb(203 213 225) 2px, transparent 2.5px);
+  --pin-bg-decor-size: auto, 22px 22px;
 
   color-scheme: light;
 }

@@ -2,9 +2,9 @@ import { createApp } from "vue"
 import App from "./App.vue"
 import "./style.css"
 
-import DevUI from "vue-devui"
-import "vue-devui/style.css"
+import { QuailUI } from "quail-ui"
+import "quail-ui/style.css"
 
 const app = createApp(App)
-app.use(DevUI)
+app.use(QuailUI)
 app.mount("#app")

@@ -1,37 +1,45 @@
 [data-theme="dark"] {
-  --pin-bg: #0f1a20;
-  --pin-surface: #1f2623;
-  --pin-surface-hover: #2a3330;
-  --pin-border: #353f3a;
-  --pin-border-hover: #3a4540;
-  --pin-ink: #e5e5e5;
-  --pin-ink-secondary: #a0a0b0;
-  --pin-ink-muted: #6b7280;
-  --pin-accent: #4dabf7;
-  --pin-accent-hover: #339af0;
-  --pin-accent-text: #0a0a0f;
-  --pin-danger: #ff6b6b;
-  --pin-success: #51cf66;
-  --pin-sidebar: #2b333e;
+  --pin-bg: #0b0e14;
+  --pin-bg-decor:
+    radial-gradient(1200px 480px at 50% -10%, rgba(74, 158, 255, 0.07), transparent 70%),
+    radial-gradient(circle, rgba(148 163 184 / 0.32) 2px, transparent 2.5px);
+  --pin-bg-decor-size: auto, 22px 22px;
+  --pin-surface: #12161d;
+  --pin-surface-hover: #1b212c;
+  --pin-border: #222b38;
+  --pin-border-hover: #323d4f;
+  --pin-ink: #e8eaed;
+  --pin-ink-secondary: #a7b0bc;
+  --pin-ink-muted: #8b949e;
+  --pin-accent: #4a9eff;
+  --pin-accent-hover: #2f8bef;
+  --pin-accent-text: #06121f;
+  --pin-danger: #f47067;
+  --pin-success: #3fb950;
+  --pin-sidebar: #0e131b;
 
   color-scheme: dark;
 }
 
 :root:not([data-theme]),
 :root:not([data-theme="light"]) {
-  --pin-bg: #0f1a20;
-  --pin-surface: #1f2623;
-  --pin-surface-hover: #2a3330;
-  --pin-border: #353f3a;
-  --pin-border-hover: #3a4540;
-  --pin-ink: #e5e5e5;
-  --pin-ink-secondary: #a0a0b0;
-  --pin-ink-muted: #6b7280;
-  --pin-accent: #4dabf7;
-  --pin-accent-hover: #339af0;
-  --pin-accent-text: #0a0a0f;
-  --pin-danger: #ff6b6b;
-  --pin-success: #51cf66;
-  --pin-sidebar: #2b333e;
+  --pin-bg: #0b0e14;
+  --pin-bg-decor:
+    radial-gradient(1200px 480px at 50% -10%, rgba(74, 158, 255, 0.07), transparent 70%),
+    radial-gradient(circle, rgba(148 163 184 / 0.32) 2px, transparent 2.5px);
+  --pin-bg-decor-size: auto, 22px 22px;
+  --pin-surface: #12161d;
+  --pin-surface-hover: #1b212c;
+  --pin-border: #222b38;
+  --pin-border-hover: #323d4f;
+  --pin-ink: #e8eaed;
+  --pin-ink-secondary: #a7b0bc;
+  --pin-ink-muted: #8b949e;
+  --pin-accent: #4a9eff;
+  --pin-accent-hover: #2f8bef;
+  --pin-accent-text: #06121f;
+  --pin-danger: #f47067;
+  --pin-success: #3fb950;
+  --pin-sidebar: #0e131b;
   color-scheme: dark;
 }

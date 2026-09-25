@@ -14,8 +14,8 @@
     "@hono/node-server": "^1.13.0",
     "hono": "^4.7.0",
     "lucide-vue-next": "^0.480.0",
-    "vue": "^3.5.0",
-    "vue-devui": "^1.6.36"
+    "quail-ui": "^0.9.11",
+    "vue": "^3.5.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.0",

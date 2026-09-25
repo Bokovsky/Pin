@@ -47,36 +47,50 @@ function scrollToTop() {
 
 <template>
   <div
-    v-if="checkSummary"
-    class="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 bg-[var(--pin-surface)] border border-[var(--pin-border)] rounded-lg px-4 py-2 shadow-lg text-sm flex items-center gap-3"
+    v-if="checkSummary || checkError"
+    class="fixed bottom-16 left-1/2 -translate-x-1/2 z-50"
   >
-    <span style="color: var(--pin-success)">{{ checkSummary.ok }} 个正常</span>
-    <span v-if="checkSummary.fail > 0" style="color: var(--pin-danger)">{{ checkSummary.fail }} 个失效</span>
-  </div>
-  <div
-    v-else-if="checkError"
-    role="alert"
-    class="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 border border-[var(--pin-danger)] rounded-lg px-4 py-2 shadow-lg text-sm"
-    style="background: var(--pin-surface); color: var(--pin-danger)"
-  >
-    {{ checkError }}
+    <QToast
+      v-if="checkSummary"
+      :model-value="true"
+      :type="checkSummary.fail > 0 ? 'warning' : 'success'"
+      :duration="0"
+      @update:model-value="(visible: boolean) => { if (!visible) checkSummary = null }"
+    >
+      <span style="color: var(--pin-success)">{{ checkSummary.ok }} 个正常</span>
+      <span v-if="checkSummary.fail > 0" style="color: var(--pin-danger)">，{{ checkSummary.fail }} 个失效</span>
+    </QToast>
+    <QToast
+      v-else-if="checkError"
+      :model-value="true"
+      type="error"
+      :duration="0"
+      :message="checkError"
+      @update:model-value="(visible: boolean) => { if (!visible) checkError = '' }"
+    />
   </div>
 
   <div class="flex items-center gap-1">
-    <button @click="emit('add-link')" class="p-2 rounded-full hover:bg-[var(--pin-surface-hover)] text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink)] transition-colors" title="添加链接">
-      <Plus class="h-5 w-5" />
-    </button>
-    <button @click="scrollToTop" class="p-2 rounded-full hover:bg-[var(--pin-surface-hover)] text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink)] transition-colors" title="返回顶部">
-      <ArrowUp class="h-5 w-5" />
-    </button>
-    <button
-      @click="handleCheck"
-      :disabled="checking"
-      class="p-2 rounded-full hover:bg-[var(--pin-surface-hover)] text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink)] transition-colors disabled:opacity-50"
-      :title="checking ? '检测中...' : '检测所有链接是否可访问'"
-    >
-      <Activity v-if="checking" class="h-5 w-5 animate-spin" />
-      <Activity v-else class="h-5 w-5" />
-    </button>
+    <QTooltip content="添加链接">
+      <button @click="emit('add-link')" aria-label="添加链接" class="p-2 rounded-full hover:bg-[var(--pin-surface-hover)] text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink)] transition-colors">
+        <Plus class="h-5 w-5" />
+      </button>
+    </QTooltip>
+    <QTooltip content="返回顶部">
+      <button @click="scrollToTop" aria-label="返回顶部" class="p-2 rounded-full hover:bg-[var(--pin-surface-hover)] text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink)] transition-colors">
+        <ArrowUp class="h-5 w-5" />
+      </button>
+    </QTooltip>
+    <QTooltip :content="checking ? '检测中...' : '检测所有链接是否可访问'">
+      <button
+        @click="handleCheck"
+        :disabled="checking"
+        :aria-label="checking ? '检测中...' : '检测所有链接是否可访问'"
+        class="p-2 rounded-full hover:bg-[var(--pin-surface-hover)] text-[var(--pin-ink-muted)] hover:text-[var(--pin-ink)] transition-colors disabled:opacity-50"
+      >
+        <Activity v-if="checking" class="h-5 w-5 animate-spin" />
+        <Activity v-else class="h-5 w-5" />
+      </button>
+    </QTooltip>
   </div>
 </template>

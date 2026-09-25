@@ -4,6 +4,12 @@ import type { Link, Category } from "../types"
 import { createLink, updateLink } from "../api"
 import { resolveLinkEditorMode } from "../linkEditorState"
 import { toOperationErrorMessage } from "../operationError"
+import { createEnterSubmitHandler } from "../utils/formSubmit"
+import {
+  findCategorySelectItem,
+  toCategorySelectItems,
+  type CategorySelectItem,
+} from "../categorySelect"
 
 const props = defineProps<{
   open: boolean
@@ -92,30 +98,42 @@ async function handleSubmit() {
     submitting.value = false
   }
 }
+
+const handleInputKeyup = createEnterSubmitHandler(handleSubmit)
+
+const categoryItems = computed(() => toCategorySelectItems(allCategories.value))
+const selectedCategoryItem = computed(() =>
+  findCategorySelectItem(categoryItems.value, categoryId.value)
+)
+
+function handleCategoryChange(item: CategorySelectItem) {
+  categoryId.value = item.value
+}
 </script>
 
 <template>
-  <d-modal :model-value="open" :title="editorMode.mode === 'edit' ? '编辑链接' : '添加链接'" @update:model-value="emit('close')" :close-on-click-overlay="true">
+  <QDialog :model-value="open" :title="editorMode.mode === 'edit' ? '编辑链接' : '添加链接'" @update:model-value="emit('close')">
     <form @submit.prevent="handleSubmit" class="space-y-3">
-      <d-input v-model="title" placeholder="标题 *" />
-      <d-input v-model="url" placeholder="URL *" type="url" />
-      <d-input v-model="description" placeholder="描述（可选）" />
-      <d-input v-model="backupUrl" placeholder="备用链接（可选）" type="url" />
-      <d-select
+      <QInput v-model="title" placeholder="标题 *" @keyup="handleInputKeyup" />
+      <QInput v-model="url" placeholder="URL *" inputType="url" @keyup="handleInputKeyup" />
+      <QInput v-model="description" placeholder="描述（可选）" @keyup="handleInputKeyup" />
+      <QInput v-model="backupUrl" placeholder="备用链接（可选）" inputType="url" @keyup="handleInputKeyup" />
+      <QDropdownMenu
         v-if="editorMode.mode === 'create'"
-        v-model="categoryId"
+        :items="categoryItems"
+        :initial-item="selectedCategoryItem"
         placeholder="选择分类 *"
-        :options="allCategories.map(c => ({ value: c.id, name: c.label }))"
+        @change="handleCategoryChange"
       />
 
-      <p v-if="errorMsg" class="text-sm" style="color: var(--pin-danger)">{{ errorMsg }}</p>
+      <QFence v-if="errorMsg" type="error" :text="errorMsg" role="alert" />
 
       <div class="flex justify-end gap-2 pt-2">
-        <d-button @click="emit('close')" variant="outline" :disabled="submitting">取消</d-button>
-        <d-button type="submit" variant="primary" :disabled="submitting">
+        <QButton class="outlined" type="button" @click="emit('close')" :disabled="submitting">取消</QButton>
+        <QButton class="primary" type="submit" :disabled="submitting">
           {{ submitting ? '保存中...' : (editorMode.mode === 'edit' ? '保存' : '添加') }}
-        </d-button>
+        </QButton>
       </div>
     </form>
-  </d-modal>
+  </QDialog>
 </template>

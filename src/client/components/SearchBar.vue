@@ -113,19 +113,23 @@ onUnmounted(() => {
 <template>
   <div ref="searchRoot" class="relative w-full max-w-lg flex items-center gap-2">
     <!-- Mode toggle -->
-    <button
-      @click="cycleMode"
-      class="flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs whitespace-nowrap transition-colors flex-shrink-0"
-      :style="{
-        color: mode === 'web' ? 'var(--pin-accent)' : 'var(--pin-ink-muted)',
-        background: mode === 'web' ? 'color-mix(in srgb, var(--pin-accent) 10%, transparent)' : 'transparent',
-      }"
-      :title="mode === 'local' ? '本地搜索' : '网络搜索'"
+    <QTooltip
+      :content="mode === 'local' ? '本地搜索' : '网络搜索'"
+      position="bottom"
     >
-      <Search v-if="mode === 'local'" class="h-3.5 w-3.5" />
-      <Globe v-else class="h-3.5 w-3.5" />
-      {{ mode === 'local' ? '本地' : '网络' }}
-    </button>
+      <button
+        @click="cycleMode"
+        class="flex items-center gap-1 px-2.5 py-2 rounded-lg text-xs whitespace-nowrap transition-colors flex-shrink-0"
+        :style="{
+          color: mode === 'web' ? 'var(--pin-accent)' : 'var(--pin-ink-muted)',
+          background: mode === 'web' ? 'color-mix(in srgb, var(--pin-accent) 10%, transparent)' : 'transparent',
+        }"
+      >
+        <Search v-if="mode === 'local'" class="h-3.5 w-3.5" />
+        <Globe v-else class="h-3.5 w-3.5" />
+        {{ mode === 'local' ? '本地' : '网络' }}
+      </button>
+    </QTooltip>
 
     <!-- Search input -->
     <div class="relative flex-1">
@@ -139,15 +143,16 @@ onUnmounted(() => {
                text-base text-[var(--pin-ink)] placeholder:text-[var(--pin-ink-muted)] focus:outline-none focus:border-[var(--pin-accent)] transition-colors"
       />
       <!-- Engine button (web mode only) -->
-      <button
-        v-if="mode === 'web'"
-        @click="openEngineSettings"
-        class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-[var(--pin-surface-hover)] transition-colors"
-        :title="'当前: ' + engineName"
-        style="color: var(--pin-ink-muted)"
-      >
-        <Settings class="h-4 w-4" />
-      </button>
+      <QTooltip v-if="mode === 'web'" :content="'当前: ' + engineName" position="bottom">
+        <button
+          @click="openEngineSettings"
+          :aria-label="'当前: ' + engineName"
+          class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-[var(--pin-surface-hover)] transition-colors"
+          style="color: var(--pin-ink-muted)"
+        >
+          <Settings class="h-4 w-4" />
+        </button>
+      </QTooltip>
     </div>
 
     <!-- Engine settings popover -->
@@ -166,7 +171,7 @@ onUnmounted(() => {
         class="w-full px-3 py-2 rounded-lg border mb-3"
         style="font-size: 16px; background: var(--pin-surface); color: var(--pin-ink); border-color: var(--pin-border);"
       />
-      <p v-if="engineError" role="alert" class="mb-3 text-sm" style="color: var(--pin-danger)">{{ engineError }}</p>
+      <QFence v-if="engineError" type="error" :text="engineError" role="alert" class="mb-3" />
       <div class="flex items-center justify-between mb-3">
         <button @click="resetEngine" class="underline" style="color: var(--pin-ink-muted); font-size: 16px">恢复默认 (Bing)</button>
       </div>

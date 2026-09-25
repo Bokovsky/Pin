@@ -2,6 +2,7 @@
 import { ref, watch } from "vue"
 import type { Category } from "../types"
 import { createCategory, updateCategory } from "../api"
+import { createEnterSubmitHandler } from "../utils/formSubmit"
 
 const props = defineProps<{
   open: boolean
@@ -47,20 +48,22 @@ async function handleSubmit() {
     submitting.value = false
   }
 }
+
+const handleInputKeyup = createEnterSubmitHandler(handleSubmit)
 </script>
 
 <template>
-  <d-modal :model-value="open" :title="category ? '编辑分类' : '新建分类'" @update:model-value="emit('close')" :close-on-click-overlay="true">
+  <QDialog :model-value="open" :title="category ? '编辑分类' : '新建分类'" @update:model-value="emit('close')">
     <form @submit.prevent="handleSubmit" class="space-y-3">
-      <d-input v-model="name" placeholder="分类名称 *" />
-      <d-input v-model="description" placeholder="描述（可选）" />
-      <p v-if="errorMsg" class="text-sm" style="color: var(--pin-danger)">{{ errorMsg }}</p>
+      <QInput v-model="name" placeholder="分类名称 *" @keyup="handleInputKeyup" />
+      <QInput v-model="description" placeholder="描述（可选）" @keyup="handleInputKeyup" />
+      <QFence v-if="errorMsg" type="error" :text="errorMsg" role="alert" />
       <div class="flex justify-end gap-2 pt-2">
-        <d-button @click="emit('close')" variant="outline" :disabled="submitting">取消</d-button>
-        <d-button type="submit" variant="primary" :disabled="submitting">
+        <QButton class="outlined" type="button" @click="emit('close')" :disabled="submitting">取消</QButton>
+        <QButton class="primary" type="submit" :disabled="submitting">
           {{ submitting ? '保存中...' : (category ? '保存' : '添加') }}
-        </d-button>
+        </QButton>
       </div>
     </form>
-  </d-modal>
+  </QDialog>
 </template>

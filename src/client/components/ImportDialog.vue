@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue"
+import { computed, ref, watch } from "vue"
 import { fetchNav, importData } from "../api"
 import type { NavData, Category, Link } from "../types"
 import {
@@ -202,6 +202,32 @@ function cancelImport() {
   preview.value = null
 }
 
+const importTabs = [
+  { id: "import", title: "导入" },
+  { id: "export", title: "导出" },
+]
+
+const activeTabItem = computed(
+  () => importTabs.find((tab) => tab.id === activeTab.value) ?? importTabs[0]
+)
+
+function handleTabChange(tab: { id: string }) {
+  activeTab.value = tab.id === "export" ? "export" : "import"
+}
+
+const exportItems = [
+  { id: "json", title: "JSON 格式", subtitle: "Pin 兼容格式，含分类、链接、备用地址" },
+  { id: "html", title: "HTML 格式", subtitle: "浏览器书签标准格式，可导入 Chrome / Edge / Firefox" },
+]
+
+function handleExportAction(item: { id: string }) {
+  if (item.id === "html") {
+    handleExportHtml()
+  } else {
+    handleExportJson()
+  }
+}
+
 async function handleDrop(e: DragEvent) {
   e.preventDefault()
   const file = e.dataTransfer?.files[0]
@@ -256,26 +282,9 @@ function dateStr() {
 </script>
 
 <template>
-  <d-modal :model-value="open" title="导入 / 导出" @update:model-value="emit('close')" :close-on-click-overlay="true">
-    <div class="flex gap-2 mb-4 border-b border-[var(--pin-border)] pb-2">
-      <button
-        @click="activeTab = 'import'"
-        class="px-3 py-1.5 rounded-md transition-colors"
-        :style="{
-          color: activeTab === 'import' ? 'var(--pin-accent)' : 'var(--pin-ink-muted)',
-          background: activeTab === 'import' ? 'color-mix(in srgb, var(--pin-accent) 10%, transparent)' : 'transparent',
-          fontSize: '16px',
-        }"
-      >导入</button>
-      <button
-        @click="activeTab = 'export'"
-        class="px-3 py-1.5 rounded-md transition-colors"
-        :style="{
-          color: activeTab === 'export' ? 'var(--pin-accent)' : 'var(--pin-ink-muted)',
-          background: activeTab === 'export' ? 'color-mix(in srgb, var(--pin-accent) 10%, transparent)' : 'transparent',
-          fontSize: '16px',
-        }"
-      >导出</button>
+  <QDialog :model-value="open" title="导入 / 导出" @update:model-value="emit('close')">
+    <div class="mb-4 border-b border-[var(--pin-border)] pb-2">
+      <QTabs :model-value="activeTabItem" :tabs="importTabs" variant="plain" @update:model-value="handleTabChange" />
     </div>
 
     <!-- Import -->
@@ -288,8 +297,8 @@ function dateStr() {
         </div>
         <p style="font-size: 16px; color: var(--pin-ink-muted)">导入后将替换当前所有链接，是否继续？</p>
         <div class="flex justify-end gap-3">
-          <button @click="cancelImport" class="px-4 py-2 rounded-lg transition-colors hover:bg-[var(--pin-surface-hover)]" style="color: var(--pin-ink-muted); font-size: 16px">取消</button>
-          <button @click="confirmImport" class="px-5 py-2 rounded-lg transition-colors" :disabled="loading" style="font-size: 16px; background: var(--pin-accent); color: var(--pin-accent-text)">{{ loading ? '导入中...' : '确认导入' }}</button>
+          <QButton class="outlined" type="button" @click="cancelImport">取消</QButton>
+          <QButton class="primary" type="button" :disabled="loading" @click="confirmImport">{{ loading ? '导入中...' : '确认导入' }}</QButton>
         </div>
       </div>
 
@@ -315,40 +324,15 @@ function dateStr() {
     <!-- Export -->
     <div v-else>
       <p class="mb-4" style="color: var(--pin-ink-muted); font-size: 16px">选择导出格式：</p>
-      <div class="space-y-3">
-        <div
-          @click="handleExportJson"
-          class="flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-colors border hover:bg-[var(--pin-surface-hover)]"
-          :style="{ borderColor: 'var(--pin-border)' }"
-        >
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: color-mix(in srgb, var(--pin-accent) 15%, transparent)">
-            <span style="color: var(--pin-accent); font-size: 16px">{ }</span>
-          </div>
-          <div class="flex-1">
-            <p style="font-size: 16px; color: var(--pin-ink)">JSON 格式</p>
-             <p style="font-size: 14px; color: var(--pin-ink-muted)">Pin 兼容格式，含分类、链接、备用地址</p>
-          </div>
-        </div>
-        <div
-          @click="handleExportHtml"
-          class="flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-colors border hover:bg-[var(--pin-surface-hover)]"
-          :style="{ borderColor: 'var(--pin-border)' }"
-        >
-          <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: color-mix(in srgb, var(--pin-accent) 15%, transparent)">
-            <span style="color: var(--pin-accent); font-size: 16px">&lt;/&gt;</span>
-          </div>
-          <div class="flex-1">
-            <p style="font-size: 16px; color: var(--pin-ink)">HTML 格式</p>
-            <p style="font-size: 14px; color: var(--pin-ink-muted)">浏览器书签标准格式，可导入 Chrome / Edge / Firefox</p>
-          </div>
-        </div>
+      <div class="pin-static-menu">
+        <QMenu :items="exportItems" @action="handleExportAction" />
       </div>
     </div>
 
-    <p v-if="error" class="mt-3" style="color: var(--pin-danger); font-size: 16px">{{ error }}</p>
+    <QFence v-if="error" type="error" :text="error" role="alert" class="mt-3" />
 
     <div class="flex justify-end mt-4">
-      <button @click="emit('close')" class="px-4 py-2 rounded-lg transition-colors hover:bg-[var(--pin-surface-hover)]" style="color: var(--pin-ink-muted); font-size: 16px">关闭</button>
+      <QButton class="outlined" type="button" @click="emit('close')">关闭</QButton>
     </div>
-  </d-modal>
+  </QDialog>
 </template>

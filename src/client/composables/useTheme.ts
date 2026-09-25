@@ -1,18 +1,23 @@
-import { ref, computed } from "vue"
+import { ref } from "vue"
+import { applyTheme as applyQuailTheme } from "quail-ui"
+import { resolveQuailUiTheme } from "../quailTheme"
 
-export type Theme = "system" | "light" | "dark"
-export type ResolvedTheme = "light" | "dark"
+export type Theme = "light" | "dark"
 
 const STORAGE_KEY = "pin-theme"
 
-const theme = ref<Theme>((localStorage.getItem(STORAGE_KEY) as Theme) || "system")
-const resolved = ref<ResolvedTheme>("dark")
+function resolveStoredTheme(): Theme {
+  const stored = localStorage.getItem(STORAGE_KEY)
+  if (stored === "light" || stored === "dark") return stored
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+}
+
+const theme = ref<Theme>(resolveStoredTheme())
+const resolved = ref<Theme>("dark")
 
 function applyTheme() {
-  const isDark =
-    theme.value === "dark" ||
-    (theme.value === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
-  resolved.value = isDark ? "dark" : "light"
+  resolved.value = theme.value
+  applyQuailTheme(resolveQuailUiTheme(theme.value), false)
   document.documentElement.setAttribute("data-theme", resolved.value)
 }
 
@@ -22,29 +27,12 @@ export function setTheme(t: Theme) {
   applyTheme()
 }
 
-export function cycleTheme() {
-  const order: Theme[] = ["system", "light", "dark"]
-  const idx = order.indexOf(theme.value)
-  setTheme(order[(idx + 1) % order.length])
-}
-
-const themeIcon = computed(() => {
-  if (theme.value === "system") return "Monitor"
-  return resolved.value === "dark" ? "Moon" : "Sun"
-})
-
-const themeLabel = computed(() => {
-  if (theme.value === "system") return "跟随系统"
-  return resolved.value === "dark" ? "深色" : "浅色"
-})
-
-let mediaQuery: MediaQueryList | null = null
-
 export function useTheme() {
-  if (typeof window !== "undefined" && !mediaQuery) {
+  if (typeof window !== "undefined") {
     applyTheme()
-    mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
-    mediaQuery.addEventListener("change", applyTheme)
+    if (localStorage.getItem(STORAGE_KEY) !== theme.value) {
+      localStorage.setItem(STORAGE_KEY, theme.value)
+    }
   }
-  return { theme, resolved, setTheme, cycleTheme, themeIcon, themeLabel }
+  return { theme, resolved, setTheme }
 }

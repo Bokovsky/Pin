@@ -10,6 +10,13 @@
   --pin-space-lg: 1rem;
   --pin-space-xl: 1.5rem;
   --pin-space-2xl: 2rem;
+  --pin-card-min-width: 11rem;
+  --pin-shell-header-padding-x: 2rem;
+  --pin-shell-header-padding-y: 1rem;
+  --pin-shell-header-min-height: 4.75rem;
+  --pin-search-min-width: 15rem;
+  --pin-content-gutter: 2rem;
+  --pin-content-gutter-lg: 2.5rem;
 
   --pin-transition-fast: 150ms ease;
   --pin-transition-normal: 200ms ease;

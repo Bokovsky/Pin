@@ -1,9 +1,5 @@
 [data-theme="dark"] {
   --pin-bg: #0b0e14;
-  --pin-bg-decor:
-    radial-gradient(1200px 480px at 50% -10%, rgba(74, 158, 255, 0.07), transparent 70%),
-    radial-gradient(circle, rgba(148 163 184 / 0.32) 2px, transparent 2.5px);
-  --pin-bg-decor-size: auto, 22px 22px;
   --pin-surface: #12161d;
   --pin-surface-hover: #1b212c;
   --pin-border: #222b38;
@@ -24,10 +20,6 @@
 :root:not([data-theme]),
 :root:not([data-theme="light"]) {
   --pin-bg: #0b0e14;
-  --pin-bg-decor:
-    radial-gradient(1200px 480px at 50% -10%, rgba(74, 158, 255, 0.07), transparent 70%),
-    radial-gradient(circle, rgba(148 163 184 / 0.32) 2px, transparent 2.5px);
-  --pin-bg-decor-size: auto, 22px 22px;
   --pin-surface: #12161d;
   --pin-surface-hover: #1b212c;
   --pin-border: #222b38;

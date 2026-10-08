@@ -19,7 +19,7 @@ import {
   type DataLoadState,
 } from "./loadingState"
 import { FolderKanban, Upload, ChevronsLeft, ChevronsRight } from "lucide-vue-next"
-import { useTheme } from "./composables/useTheme"
+import { useAsciiBackdrop } from "./composables/useAsciiBackdrop"
 import { toSidebarNodes } from "./sidebarTree"
 
 const data = ref<NavData>({ categories: [] })
@@ -37,12 +37,8 @@ function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
 }
 
-const { resolved, setTheme } = useTheme()
-
-const checked = computed({
-  get: () => resolved.value === "dark",
-  set: (value: boolean) => setTheme(value ? "dark" : "light"),
-})
+const backdropCanvas = ref<HTMLCanvasElement | null>(null)
+useAsciiBackdrop(backdropCanvas)
 
 const filteredCategories = computed(() => filterCategoriesByQuery(data.value.categories, searchQuery.value))
 
@@ -112,6 +108,7 @@ onMounted(loadInitialData)
 
 <template>
   <div class="h-screen overflow-hidden flex flex-col">
+    <canvas ref="backdropCanvas" class="fixed inset-0 -z-10 h-full w-full object-cover opacity-50" aria-hidden="true" />
     <header class="pin-shell-header relative z-40 flex-none bg-[var(--pin-surface)]/80 backdrop-blur border-b border-[var(--pin-border)]">
       <!-- Logo -->
       <div class="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0"
@@ -133,7 +130,6 @@ onMounted(loadInitialData)
             <span>导入/导出</span>
           </button>
         </QTooltip>
-        <QSwitch v-model="checked" theme="plastic" />
       </div>
     </header>
 

@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "./theme/vars.css";
-@import "./theme/light.css";
 @import "./theme/dark.css";
 
 /* Pin typography baseline */
@@ -126,14 +125,10 @@ button, input, select, textarea {
   }
 }
 
-/* body always carries Quail's .dark/.light class: qualify to beat
+/* body always carries Quail's .dark class: qualify to beat
    Quail's bare `.dark{background:...}` helper (0,1,0) without !important */
-body.dark,
-body.light {
+body.dark {
   background-color: var(--pin-bg);
-  background-image: var(--pin-bg-decor);
-  background-size: var(--pin-bg-decor-size, auto);
-  background-attachment: fixed;
   color: var(--pin-ink);
   transition: background-color var(--pin-transition-normal),
               color var(--pin-transition-normal);
